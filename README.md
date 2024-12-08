@@ -15,7 +15,7 @@ This action provides a way to retrieve ECR automatic scans with direct feedback 
 ## Usage
 
 ```yaml
-- uses: vonsteer/ecr-scanning-action@v1.0.2
+- uses: vonsteer/ecr-scanning-action@v1.0.0
   with:
     repository: myorg/myimage  # ECR repository name
     tag: latest               # Image tag to scan
@@ -82,7 +82,7 @@ jobs:
           role-to-assume: arn:aws:iam::123456789012:role/github-actions
           aws-region: us-east-2
 
-      - uses: vonsteer/ecr-scanning-action@v1
+      - uses: vonsteer/ecr-scanning-action@v1.0.0
         with:
           repository: myorg/myimage
           tag: latest
