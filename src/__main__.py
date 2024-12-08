@@ -108,9 +108,9 @@ def scan(
         ignore_list=ignore_list,
         region=region,
     )
-    print_findings_table(scan_result, Console())
+    print_findings_table(scan_result, Console(force_terminal=True))
     detailed_findings = [i.model_dump() for i in scan_result.findings]
-    if not github:
+    if github:
         # Set output variables using GitHub Actions workflow commands
         set_output("critical", str(scan_result.severity_counts.CRITICAL))
         set_output("high", str(scan_result.severity_counts.HIGH))
@@ -127,10 +127,15 @@ def scan(
             failing_counts += count
 
     if failing_counts:
-        raise RuntimeError(
+        pprint(
             f"Found {failing_counts} vulnerabilities at"
             f" or above the {fail_threshold} threshold"
         )
+        if github:
+            set_output("outcome", "failure")
+            return
+    if github:
+        set_output("outcome", "success")
 
 
 def set_output(name: str, value: str) -> None:

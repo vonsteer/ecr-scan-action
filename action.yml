@@ -57,7 +57,6 @@ runs:
         uv pip install --system ${{ github.action_path }}
     - name: Pull Scan Results
       id: scan
-      continue-on-error: true
       shell: bash
       run: |
         ecr-scan '${{ inputs.repository }}' \
@@ -68,8 +67,7 @@ runs:
       if: |
         inputs.pr_comment &&
         steps.scan.outputs.total != '0' &&
-        github.event_name == 'pull_request' &&
-        (success() || failure())
+        github.event_name == 'pull_request'
       uses: peter-evans/create-or-update-comment@v3
       with:
         issue-number: ${{ github.event.pull_request.number }}
@@ -90,6 +88,6 @@ runs:
           ```
           ${{ (steps.scan.outputs.critical != '0' || steps.scan.outputs.high != '0') && '⚠️ **Build Failed**: Critical or high severity vulnerabilities were detected. These must be addressed before merging.' || 'Please review these security findings before merging.' }}
     - name: Fail if scan failed
-      if: steps.scan.outcome == 'failure'
+      if: steps.scan.outputs.outcome == 'failure'
       shell: bash
       run: exit 1
