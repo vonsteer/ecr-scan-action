@@ -126,7 +126,7 @@ def scan(
         set_output("informational", str(scan_result.severity_counts.INFORMATIONAL))
         set_output("undefined", str(scan_result.severity_counts.UNDEFINED))
         set_output("total", str(scan_result.total_findings))
-        set_output("detailed_findings", json.dumps(detailed_findings))
+        set_output("detailed_findings", json.dumps(detailed_findings, indent=2))
 
     failing_counts = 0
     for severity, count in scan_result.severity_counts:

@@ -87,7 +87,7 @@ runs:
           ```json
           ${{ steps.scan.outputs.detailed_findings }}
           ```
-          ${{ (steps.scan.outputs.critical != '0' || steps.scan.outputs.high != '0') && '⚠️ **Build Failed**: Critical or high severity vulnerabilities were detected. These must be addressed before merging.' || 'Please review these security findings before merging.' }}
+          ${{ steps.scan.outputs.outcome == 'failure' && '⚠️ **Build Failed**: Vulnerabilities were detected that exceeded threshold. These must be addressed before merging.' || 'Please review these security findings before merging.' }}
     - name: Fail if scan failed
       if: steps.scan.outputs.outcome == 'failure'
       shell: bash
