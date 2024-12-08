@@ -1,5 +1,7 @@
 import argparse
+import os
 import sys
+import uuid
 
 from rich import print as pprint
 from rich.console import Console
@@ -109,7 +111,7 @@ def scan(
         region=region,
     )
     print_findings_table(scan_result, Console(force_terminal=True))
-    detailed_findings = [i.model_dump() for i in scan_result.findings]
+    detailed_findings = [i.model_dump_json() for i in scan_result.findings]
     if github:
         # Set output variables using GitHub Actions workflow commands
         set_output("critical", str(scan_result.severity_counts.CRITICAL))
@@ -146,7 +148,13 @@ def set_output(name: str, value: str) -> None:
         name: Name of the output variable
         value: Value to set
     """
-    print(f"::set-output name={name}::{value}")
+    with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+        if "\n" in value:
+            # Use delimiter syntax for multiline values
+            delimiter = uuid.uuid4()
+            fh.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
+        else:
+            fh.write(f"{name}={value}\n")
 
 
 def parse_args() -> argparse.Namespace:
