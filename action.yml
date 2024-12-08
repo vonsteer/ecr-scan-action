@@ -62,7 +62,7 @@ runs:
       run: |
         ecr-scan '${{ inputs.repository }}' \
                  '${{ inputs.tag }}' \
-                 --fail_threshold='${{ inputs.fail_threshold }}' \
+                 --fail-threshold='${{ inputs.fail_threshold }}' \
                  --ignore-list='${{ inputs.ignore_list }}'
     - name: PR Feedback Comment
       if: |
