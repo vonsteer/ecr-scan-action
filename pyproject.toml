@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecr-scanning-action"
+version = "0.0.1"
+description = "AWS ECR Image Scanner"
+urls = {source = "https://github.com/vonsteer/ecr-scan-action"}
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["ecr", "aws", "action", "github", "vulnerabilities", "security", "scanning"]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "boto3==1.35.76",
+    "pydantic==2.10.3",
+    "rich==13.9.4"
+]
+
+[project.scripts]
+ecr-scan = "src.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
