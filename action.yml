@@ -57,26 +57,25 @@ runs:
         uv pip install --system ${{ github.action_path }}
     - name: Pull Scan Results
       id: scan
-      continue-on-error: true
       shell: bash
       run: |
         ecr-scan '${{ inputs.repository }}' \
                  '${{ inputs.tag }}' \
+                 --github_action \
                  --fail-threshold='${{ inputs.fail_threshold }}' \
                  --ignore-list='${{ inputs.ignore_list }}'
     - name: PR Feedback Comment
       if: |
         inputs.pr_comment &&
         steps.scan.outputs.total != '0' &&
-        github.event_name == 'pull_request' &&
-        (success() || failure())
+        github.event_name == 'pull_request'
       uses: peter-evans/create-or-update-comment@v3
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
-          ## 🛡️ AWS ECR Security Scan Results
-          ### 📦 Image: ${{ inputs.repository }}:${{ inputs.tag }}
-          ### 📈 Vulnerability Summary
+          ### 🛡️ AWS ECR Security Scan Results
+          #### 📦 Image: `${{ inputs.repository }}:${{ inputs.tag }}`
+          #### 📈 Vulnerability Summary
           ${{ steps.scan.outputs.critical != '0' && format('⚠️ CRITICAL: {0}', steps.scan.outputs.critical) || '' }}
           ${{ steps.scan.outputs.high != '0' && format('🔴 HIGH: {0}', steps.scan.outputs.high) || '' }}
           ${{ steps.scan.outputs.medium != '0' && format('🟡 MEDIUM: {0}', steps.scan.outputs.medium) || '' }}
@@ -84,12 +83,12 @@ runs:
           ${{ steps.scan.outputs.informational != '0' && format('🔵 INFORMATIONAL: {0}', steps.scan.outputs.informational) || '' }}
           ${{ steps.scan.outputs.undefined != '0' && format('🟣 UNDEFINED: {0}', steps.scan.outputs.undefined) || '' }}
 
-          ### 🔍 Detailed Findings
+          #### 🔍 Detailed Findings
           ```json
           ${{ steps.scan.outputs.detailed_findings }}
           ```
-          ${{ (steps.scan.outputs.critical != '0' || steps.scan.outputs.high != '0') && '⚠️ **Build Failed**: Critical or high severity vulnerabilities were detected. These must be addressed before merging.' || 'Please review these security findings before merging.' }}
+          ${{ steps.scan.outputs.outcome == 'failure' && '⚠️ **Build Failed**: Vulnerabilities were detected that exceeded threshold. These must be addressed before merging.' || 'Please review these security findings before merging.' }}
     - name: Fail if scan failed
-      if: steps.scan.outcome == 'failure'
+      if: steps.scan.outputs.outcome == 'failure'
       shell: bash
       run: exit 1

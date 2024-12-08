@@ -1,7 +1,11 @@
 import argparse
+import json
+import os
 import sys
+import uuid
 
 from rich import print as pprint
+from rich.box import SQUARE
 from rich.console import Console
 from rich.table import Table
 
@@ -17,7 +21,9 @@ def print_findings_table(scan_result: ScanResult, console: Console) -> None:
         f" ({scan_result.severity_counts}) [/bold]"
     )
 
-    table = Table(title="ECR Image Scan Findings")
+    table = Table(
+        title="ECR Image Scan Findings", show_lines=True, box=SQUARE, expand=True
+    )
 
     # Add columns
     table.add_column("Severity", style="bold")
@@ -62,8 +68,8 @@ def print_findings_table(scan_result: ScanResult, console: Console) -> None:
             finding.name,
             str(finding.package_name),
             str(finding.package_version),
-            finding.description[:200] + "..."
-            if len(finding.description) > 200
+            finding.description[:300] + "..."
+            if len(finding.description) > 300
             else finding.description,
         )
 
@@ -75,7 +81,7 @@ def scan(
     tag: str,
     fail_threshold: str = "high",
     ignore_list: list[str] | None = None,
-    github: bool = True,
+    github: bool = False,
     region: str = "us-east-2",
 ):
     """
@@ -86,6 +92,7 @@ def scan(
         tag: Image tag to scan
         fail_threshold: Severity threshold to fail on ('critical', 'high', 'medium',
         'low', 'informational')
+        github: Set to False to disable GitHub Actions output variables
         ignore_list: List of vulnerability IDs to ignore
 
     Raises:
@@ -108,9 +115,9 @@ def scan(
         ignore_list=ignore_list,
         region=region,
     )
-    print_findings_table(scan_result, Console())
+    print_findings_table(scan_result, Console(force_terminal=True))
     detailed_findings = [i.model_dump() for i in scan_result.findings]
-    if not github:
+    if github:
         # Set output variables using GitHub Actions workflow commands
         set_output("critical", str(scan_result.severity_counts.CRITICAL))
         set_output("high", str(scan_result.severity_counts.HIGH))
@@ -119,7 +126,7 @@ def scan(
         set_output("informational", str(scan_result.severity_counts.INFORMATIONAL))
         set_output("undefined", str(scan_result.severity_counts.UNDEFINED))
         set_output("total", str(scan_result.total_findings))
-        set_output("detailed_findings", str(detailed_findings))
+        set_output("detailed_findings", json.dumps(detailed_findings, indent=2))
 
     failing_counts = 0
     for severity, count in scan_result.severity_counts:
@@ -127,10 +134,17 @@ def scan(
             failing_counts += count
 
     if failing_counts:
-        raise RuntimeError(
+        message = (
             f"Found {failing_counts} vulnerabilities at"
             f" or above the {fail_threshold} threshold"
         )
+        if github:
+            pprint(message)
+            set_output("outcome", "failure")
+            return
+        raise RuntimeError(message)
+    if github:
+        set_output("outcome", "success")
 
 
 def set_output(name: str, value: str) -> None:
@@ -141,7 +155,13 @@ def set_output(name: str, value: str) -> None:
         name: Name of the output variable
         value: Value to set
     """
-    print(f"::set-output name={name}::{value}")
+    with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+        if "\n" in value:
+            # Use delimiter syntax for multiline values
+            delimiter = uuid.uuid4()
+            fh.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
+        else:
+            fh.write(f"{name}={value}\n")
 
 
 def parse_args() -> argparse.Namespace:
@@ -173,8 +193,9 @@ def parse_args() -> argparse.Namespace:
         help="AWS region to use for scanning (default: us-east-2)",
     )
     parser.add_argument(
-        "--github",
-        default=True,
+        "--github_action",
+        action="store_true",
+        default=False,
         help="Set to False to disable GitHub Actions output variables",
     )
     return parser.parse_args()
@@ -187,7 +208,7 @@ def main() -> None:
         tag=args.tag,
         fail_threshold=args.fail_threshold,
         ignore_list=args.ignore_list,
-        github=args.github,
+        github=args.github_action,
         region=args.region,
     )
 

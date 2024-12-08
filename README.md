@@ -15,11 +15,11 @@ This action provides a way to retrieve ECR automatic scans with direct feedback 
 ## Usage
 
 ```yaml
-- uses: your-org/ecr-scanning-action@v1
+- uses: vonsteer/ecr-scanning-action@v1.0.2
   with:
     repository: myorg/myimage  # ECR repository name
     tag: latest               # Image tag to scan
-    fail_threshold: high      # Optional: Severity level that will cause failure
+    fail_threshold: high      # Optional: Severity level that will cause failure (default: high)
     ignore_list: CVE-2023-1234 CVE-2023-5678  # Optional: CVEs to ignore
     region: us-east-2        # Optional: AWS region (default: us-east-2)
     pr_comment: true         # Optional: Post results as PR comment (default: true)
@@ -82,7 +82,7 @@ jobs:
           role-to-assume: arn:aws:iam::123456789012:role/github-actions
           aws-region: us-east-2
 
-      - uses: your-org/ecr-scanning-action@v1
+      - uses: vonsteer/ecr-scanning-action@v1
         with:
           repository: myorg/myimage
           tag: latest
