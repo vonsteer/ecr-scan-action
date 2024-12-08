@@ -73,9 +73,9 @@ runs:
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
-          ## 🛡️ AWS ECR Security Scan Results
-          ### 📦 Image: ${{ inputs.repository }}:${{ inputs.tag }}
-          ### 📈 Vulnerability Summary
+          ### 🛡️ AWS ECR Security Scan Results
+          #### 📦 Image: `${{ inputs.repository }}:${{ inputs.tag }}`
+          #### 📈 Vulnerability Summary
           ${{ steps.scan.outputs.critical != '0' && format('⚠️ CRITICAL: {0}', steps.scan.outputs.critical) || '' }}
           ${{ steps.scan.outputs.high != '0' && format('🔴 HIGH: {0}', steps.scan.outputs.high) || '' }}
           ${{ steps.scan.outputs.medium != '0' && format('🟡 MEDIUM: {0}', steps.scan.outputs.medium) || '' }}
@@ -83,7 +83,7 @@ runs:
           ${{ steps.scan.outputs.informational != '0' && format('🔵 INFORMATIONAL: {0}', steps.scan.outputs.informational) || '' }}
           ${{ steps.scan.outputs.undefined != '0' && format('🟣 UNDEFINED: {0}', steps.scan.outputs.undefined) || '' }}
 
-          ### 🔍 Detailed Findings
+          #### 🔍 Detailed Findings
           ```json
           ${{ steps.scan.outputs.detailed_findings }}
           ```
