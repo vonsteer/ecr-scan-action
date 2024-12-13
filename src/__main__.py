@@ -104,7 +104,7 @@ def scan(
         "medium": 2,
         "low": 1,
         "informational": 0,
-        "undefined": 0
+        "undefined": 0,
         "none": 5,
     }
 
