@@ -104,7 +104,8 @@ def scan(
         "medium": 2,
         "low": 1,
         "informational": 0,
-        "none": -1,
+        "undefined": 0
+        "none": 5,
     }
 
     threshold_level = severity_levels[fail_threshold.lower()]
