@@ -51,7 +51,7 @@ class Finding(BaseModel):
 
 
 class ScanResult(BaseModel):
-    ignore_list: list[str] | None = Field(None, repr=False)
+    ignore_list: str | None = Field(None, repr=False)
     scan_completed_at: datetime = Field(..., alias="imageScanCompletedAt")
     source_updated_at: datetime = Field(..., alias="vulnerabilitySourceUpdatedAt")
     severity_counts: SeverityCount = Field(..., alias="findingSeverityCounts")
@@ -80,7 +80,7 @@ class ScanResult(BaseModel):
                 filtered_severity_counts[finding["severity"]] += 1
                 filtered_findings.append(finding)
             data["findings"] = filtered_findings
-            data["severity_counts"] = filtered_severity_counts
+            data["findingSeverityCounts"] = filtered_severity_counts
         return data
 
     @computed_field
@@ -108,7 +108,7 @@ def get_image_scan_findings(
     region: str = "us-east-2",
     max_retries: int = 10,
     retry_delay: int = 5,
-    ignore_list: list[str] | None = None,
+    ignore_list: str | None = None,
 ) -> ScanResult:
     """
     Retrieve the security scan findings for a specified ECR image.
