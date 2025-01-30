@@ -63,7 +63,7 @@ class ScanResult(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def filter_findings(cls, data: Any) -> Any:
-        if ignore_list := data.get("_ignore_list"):
+        if ignore_list := data.get("ignore_list"):
             # Filter out ignored findings
             filtered_findings = []
             filtered_severity_counts = {
