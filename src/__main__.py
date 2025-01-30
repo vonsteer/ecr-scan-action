@@ -20,67 +20,67 @@ def print_findings_table(scan_result: ScanResult, console: Console) -> None:
         f"[bold]Total: {scan_result.total_findings}"
         f" ({scan_result.severity_counts}) [/bold]"
     )
-
-    table = Table(
-        title="ECR Image Scan Findings", show_lines=True, box=SQUARE, expand=True
-    )
-
-    # Add columns
-    table.add_column("Severity", style="bold")
-    table.add_column("Name", style="dim")
-    table.add_column("Package", style="bold")
-    table.add_column("Version", style="dim")
-    table.add_column("Description")
-
-    # Define severity colors
-    severity_colors = {
-        "CRITICAL": "red",
-        "HIGH": "red3",
-        "MEDIUM": "yellow",
-        "LOW": "green",
-        "INFORMATIONAL": "blue",
-        "UNDEFINED": "dim",
-    }
-
-    # Sort findings by severity level
-    severity_order = {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 2,
-        "LOW": 3,
-        "INFORMATIONAL": 4,
-        "UNDEFINED": 5,
-    }
-
-    sorted_findings: list[Finding] = sorted(
-        scan_result.findings,
-        key=lambda x: (
-            severity_order.get(x.severity, 999),
-            x.package_name,
-            x.name,
-        ),
-    )
-
-    # Add rows
-    for finding in sorted_findings:
-        table.add_row(
-            f"[{severity_colors[finding.severity]}]{finding.severity}[/]",
-            finding.name,
-            str(finding.package_name),
-            str(finding.package_version),
-            finding.description[:300] + "..."
-            if len(finding.description) > 300
-            else finding.description,
+    if scan_result.total_findings:
+        table = Table(
+            title="ECR Image Scan Findings", show_lines=True, box=SQUARE, expand=True
         )
 
-    console.print(table)
+        # Add columns
+        table.add_column("Severity", style="bold")
+        table.add_column("Name", style="dim")
+        table.add_column("Package", style="bold")
+        table.add_column("Version", style="dim")
+        table.add_column("Description")
+
+        # Define severity colors
+        severity_colors = {
+            "CRITICAL": "red",
+            "HIGH": "red3",
+            "MEDIUM": "yellow",
+            "LOW": "green",
+            "INFORMATIONAL": "blue",
+            "UNDEFINED": "dim",
+        }
+
+        # Sort findings by severity level
+        severity_order = {
+            "CRITICAL": 0,
+            "HIGH": 1,
+            "MEDIUM": 2,
+            "LOW": 3,
+            "INFORMATIONAL": 4,
+            "UNDEFINED": 5,
+        }
+
+        sorted_findings: list[Finding] = sorted(
+            scan_result.findings,
+            key=lambda x: (
+                severity_order.get(x.severity, 999),
+                x.package_name,
+                x.name,
+            ),
+        )
+
+        # Add rows
+        for finding in sorted_findings:
+            table.add_row(
+                f"[{severity_colors[finding.severity]}]{finding.severity}[/]",
+                finding.name,
+                str(finding.package_name),
+                str(finding.package_version),
+                finding.description[:300] + "..."
+                if len(finding.description) > 300
+                else finding.description,
+            )
+
+        console.print(table)
 
 
 def scan(
     repository: str,
     tag: str,
     fail_threshold: str = "high",
-    ignore_list: list[str] | None = None,
+    ignore_list: str | None = None,
     github: bool = False,
     region: str = "us-east-2",
 ):
@@ -185,7 +185,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--ignore-list",
-        nargs="*",
         help="Space-separated list of vulnerability IDs to ignore",
     )
     parser.add_argument(
