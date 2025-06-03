@@ -87,6 +87,8 @@ def scan(
     ignore_list: str | None = None,
     github: bool = False,
     region: str = "us-east-2",
+    max_retries: int = 10,
+    retry_delay: int = 5,
 ) -> None:
     """
     Main function to scan ECR images and check for vulnerabilities
@@ -119,6 +121,8 @@ def scan(
         image_tag=tag,
         ignore_list=ignore_list,
         region=region,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
     )
     print_findings_table(scan_result, Console(force_terminal=True))
     detailed_findings = [i.model_dump() for i in scan_result.findings]
@@ -207,6 +211,18 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Set to False to disable GitHub Actions output variables",
     )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=10,
+        help="Maximum number of retries to check scan status (default: 10)",
+    )
+    parser.add_argument(
+        "--retry-delay",
+        type=int,
+        default=5,
+        help="Delay in seconds between retry attempts (default: 5)",
+    )
     return parser.parse_args()
 
 
@@ -220,6 +236,8 @@ def main() -> None:
         ignore_list=args.ignore_list,
         github=args.github_action,
         region=args.region,
+        max_retries=args.max_retries,
+        retry_delay=args.retry_delay,
     )
 
 

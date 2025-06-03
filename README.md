@@ -37,6 +37,9 @@ This action provides a way to retrieve ECR automatic scans with direct feedback 
 | `ignore_list` | List of CVE IDs to ignore | No | - |
 | `region` | AWS region | No | `us-east-2` |
 | `pr_comment` | Post results as PR comment | No | `true` |
+| `max_retries` | Maximum number of retries for API calls | No | `10` |
+| `retry_delay` | Delay between retries (in seconds) | No | `5` |
+
 
 ### Fail Thresholds
 

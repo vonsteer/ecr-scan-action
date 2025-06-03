@@ -24,6 +24,12 @@ inputs:
   pr_comment:
     description: Whether to post a comment on the PR with the scan results.
     default: true
+  max_retries:
+    description: Maximum number of retries for the scan command.
+    default: 3
+  retry_delay:
+    description: Delay in seconds between retries for the scan command.
+    default: 5
 outputs:
   critical:
     description: Number of critical vulnerabilities detected.
@@ -62,6 +68,9 @@ runs:
                  --github_action \
                  --fail-threshold='${{ inputs.fail_threshold }}' \
                  --ignore-list='${{ inputs.ignore_list }}'
+                 --region='${{ inputs.region }}' \
+                 --max-retries='${{ inputs.max_retries }}' \
+                 --retry-delay='${{ inputs.retry_delay }}'
     - name: PR Feedback Comment
       if: |
         inputs.pr_comment &&
