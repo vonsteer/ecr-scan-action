@@ -31,7 +31,7 @@ def test_smoke() -> None:
         print("CLI help command executed successfully")
     except (ImportError, subprocess.CalledProcessError, AssertionError) as e:
         print(f"Smoke test failed: {e}")
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ class TestMain:
         "sys.argv",
         ["ecr-scan", "test-repo", "latest", "--github_action", "--region", "us-west-2"],
     )
-    def test_parse_args(self):
+    def test_parse_args(self) -> None:
         """Test argument parsing"""
         args = parse_args()
         assert args.repository == "test-repo"
@@ -21,7 +21,11 @@ class TestMain:
 
     @patch("src.__main__.scan")
     @patch("src.__main__.parse_args")
-    def test_main_function(self, mock_parse_args, mock_scan):
+    def test_main_function(
+        self,
+        mock_parse_args: MagicMock,
+        mock_scan: MagicMock,
+    ) -> None:
         """Test the main function that calls scan with parsed arguments"""
         # Mock the parsed arguments
         mock_args = MagicMock()

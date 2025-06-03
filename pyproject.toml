@@ -46,6 +46,7 @@ dev = [
     "pytest~=8.3.5",
     "pytest-asyncio~=0.24.0",
     "pytest-cov~=6.1.1",
+    "types-boto3[ecr]==1.35.76"
 ]
 
 
@@ -76,3 +77,81 @@ exclude_lines = [
 cov = ["src"]
 cov-report = ["term-missing", "xml", "html"]
 
+[tool.pyright]
+typeCheckingMode = "standard"
+include = ["aiocache_dynamodb"]
+exclude = [
+    "**/__pycache__",
+    "**/tests"
+]
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+
+[tool.ruff]
+# List of enabled rulsets.
+# See https://docs.astral.sh/ruff/rules/ for more information.
+lint.select = [
+    "E",   # Error
+    "F",   # Pyflakes
+    "W",   # Pycodestyle
+    "C90", # McCabe complexity
+    "I",   # Isort
+    "N",   # pep8-naming
+    "D",   # Pydocstyle
+    "ANN", # Pytype annotations
+    "S",   # Bandit
+    "B",   # Bugbear
+    "COM", # Commas
+    "C4",  # Comprehensions
+    "ISC", # Implicit string concat
+    "PIE", # Unnecessary code
+    "T20", # Catch prints
+    "PYI", # validate pyi files
+    "Q",   # Checks for quotes
+    "RSE", # Checks raise statements
+    "RET", # Checks return statements
+    "SLF", # Self checks
+    "SIM", # Simplificator
+    "PTH", # Pathlib checks
+    "ERA", # Checks for commented out code
+    "PL",  # PyLint checks
+    "RUF", # Specific to Ruff checks
+]
+lint.ignore = [
+    "D105",    # Missing docstring in magic method
+    "D107",    # Missing docstring in __init__
+    "D212",    # Multi-line docstring summary should start at the first line
+    "D401",    # First line should be in imperative mood
+    "D104",    # Missing docstring in public package
+    "D100",    # Missing docstring in public module
+    "D400",    # First line should end with a period
+    "D205",    # 1 blank line required before class docstring
+    "ANN401",  # typing.Any are disallowed in `**kwargs
+    "PLR0913", # Too many arguments for function call
+    "D106",    # Missing docstring in public nested class
+    "SIM210",  # Unnecessary if-expr-with-true-false
+    "T201",    # Print statement found
+    "COM812",  # Comma at end of multiline list
+]
+lint.exclude = [".venv/"]
+lint.mccabe = { max-complexity = 10 }
+line-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",   # Use of assert detected
+    "S301",   # Use of pickle detected
+    "D103",   # Missing docstring in public function
+    "SLF001", # Private member accessed
+    "S311",   # Standard pseudo-random generators are not suitable for security/cryptographic purposes
+    "D101",   # Missing docstring in public class
+    "PLR2004", # Magic value used in comparison
+    "T201",  # Print statement found
+    "S603",  # Use of subprocess detected
+    "F401",  # F401: module imported but unused
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+ignore-decorators = ["typing.overload"]

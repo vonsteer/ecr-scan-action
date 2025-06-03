@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import uuid
+from pathlib import Path
 
 from rich import print as pprint
 from rich.box import SQUARE
@@ -11,18 +12,23 @@ from rich.table import Table
 
 from src.scan import Finding, ScanResult, get_image_scan_findings
 
+MAX_DESCRIPTION_LENGTH = 300
+
+GITHUB_OUTPUT_FILE = Path(os.environ["GITHUB_OUTPUT"])
+
 
 def print_findings_table(scan_result: ScanResult, console: Console) -> None:
-    """
-    Print a formatted table of vulnerability findings
-    """
+    """Print a formatted table of vulnerability findings."""
     pprint(
         f"[bold]Total: {scan_result.total_findings}"
-        f" ({scan_result.severity_counts}) [/bold]"
+        f" ({scan_result.severity_counts}) [/bold]",
     )
     if scan_result.total_findings:
         table = Table(
-            title="ECR Image Scan Findings", show_lines=True, box=SQUARE, expand=True
+            title="ECR Image Scan Findings",
+            show_lines=True,
+            box=SQUARE,
+            expand=True,
         )
 
         # Add columns
@@ -68,8 +74,8 @@ def print_findings_table(scan_result: ScanResult, console: Console) -> None:
                 finding.name,
                 str(finding.package_name),
                 str(finding.package_version),
-                finding.description[:300] + "..."
-                if len(finding.description) > 300
+                finding.description[:MAX_DESCRIPTION_LENGTH] + "..."
+                if len(finding.description) > MAX_DESCRIPTION_LENGTH
                 else finding.description,
             )
 
@@ -156,7 +162,7 @@ def set_output(name: str, value: str) -> None:
         name: Name of the output variable
         value: Value to set
     """
-    with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+    with GITHUB_OUTPUT_FILE.open("a") as fh:
         if "\n" in value:
             # Use delimiter syntax for multiline values
             delimiter = uuid.uuid4()
@@ -166,6 +172,11 @@ def set_output(name: str, value: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command line arguments for the script.
+
+    Returns:
+        Parsed arguments as a Namespace object
+    """
     parser = argparse.ArgumentParser(description="Scan ECR images for vulnerabilities")
     parser.add_argument("repository", help="ECR repository name")
     parser.add_argument("tag", help="Image tag to scan")
@@ -202,6 +213,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Parses command line arguments and initiates the scan"""
     args = parse_args()
     scan(
         repository=args.repository,

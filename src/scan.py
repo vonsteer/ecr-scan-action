@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class SeverityCount(BaseModel):
+    """Model representing the counts of different severity levels in a scan."""
+
     CRITICAL: int = 0
     HIGH: int = 0
     MEDIUM: int = 0
@@ -24,11 +26,15 @@ class SeverityCount(BaseModel):
 
 
 class Attribute(BaseModel):
+    """Model representing an attribute of a vulnerability finding."""
+
     key: str
     value: str
 
 
 class Finding(BaseModel):
+    """Model representing a single vulnerability finding in an ECR image scan."""
+
     name: str
     description: str
     uri: str
@@ -37,6 +43,7 @@ class Finding(BaseModel):
 
     @computed_field
     def package_name(self) -> str:
+        """Get the package name from attributes, defaulting to 'Unknown'."""
         for item in self.attributes:
             if item.key == "package_name":
                 return item.value
@@ -44,6 +51,7 @@ class Finding(BaseModel):
 
     @computed_field
     def package_version(self) -> str:
+        """Get the package version from attributes, defaulting to 'Unknown'."""
         for item in self.attributes:
             if item.key == "package_version":
                 return item.value
@@ -51,18 +59,22 @@ class Finding(BaseModel):
 
 
 class ScanResult(BaseModel):
+    """Model representing the result of an ECR image scan."""
+
     ignore_list: str | None = Field(None, repr=False)
     scan_completed_at: datetime = Field(..., alias="imageScanCompletedAt")
     source_updated_at: datetime = Field(..., alias="vulnerabilitySourceUpdatedAt")
     severity_counts: SeverityCount = Field(..., alias="findingSeverityCounts")
     findings: list[Finding] = Field(default_factory=list)
     enhanced_findings: list[Finding] = Field(
-        default_factory=list, alias="enhancedFindings"
+        default_factory=list,
+        alias="enhancedFindings",
     )
 
     @model_validator(mode="before")
     @classmethod
     def filter_findings(cls, data: Any) -> Any:
+        """Filter findings based on the ignore list."""
         if ignore_list := data.get("ignore_list"):
             # Filter out ignored findings
             if "," in ignore_list:
@@ -91,12 +103,26 @@ class ScanResult(BaseModel):
 
     @computed_field
     def total_findings(self) -> int:
+        """Calculate the total number of findings."""
         return len(self.findings)
 
 
 def get_scan_findings(
-    ecr_client: ECRClient, repository_name: str, image_tag: str
+    ecr_client: ECRClient,
+    repository_name: str,
+    image_tag: str,
 ) -> DescribeImageScanFindingsResponseTypeDef | None:
+    """Retrieve the scan findings for a specific ECR image.
+    Args:
+        ecr_client: Boto3 ECR client
+        repository_name: Name of the ECR repository
+        image_tag: Tag of the image to check
+    Returns:
+        DescribeImageScanFindingsResponseTypeDef | None: The scan findings if available,
+         otherwise None.
+    Raises:
+        ClientError: If there's an error accessing ECR or if the scan is not found
+    """
     try:
         return ecr_client.describe_image_scan_findings(
             repositoryName=repository_name,
@@ -154,7 +180,7 @@ def get_image_scan_findings(
                 )
             case "FAILED":
                 raise RuntimeError(
-                    f"Scan failed: {findings['imageScanStatus'].get('description')}"
+                    f"Scan failed: {findings['imageScanStatus'].get('description')}",
                 )
             case _:
                 pass

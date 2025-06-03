@@ -1,12 +1,13 @@
 import os
 from datetime import datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import boto3
 import pytest
 from botocore.exceptions import ClientError
 from botocore.stub import Stubber
+
 from src.scan import Finding, ScanResult, get_image_scan_findings
 
 
@@ -60,12 +61,12 @@ def scan_findings_response_ignore() -> dict[str, Any]:
 class TestECRScanner:
     """Tests for the ECR scanning functionality"""
 
-    def setup_method(self):
-        # Create a boto3 client and stubber for testing
+    def setup_method(self) -> None:
+        """Set up the ECR client and stubber for testing"""
         self.ecr_client = boto3.client("ecr", region_name="us-east-2")
         self.stubber = Stubber(self.ecr_client)
 
-    def test_get_image_scan_findings_success(self):
+    def test_get_image_scan_findings_success(self) -> None:
         """Test successful retrieval of scan findings"""
         # Mock successful response data
         scan_findings_response = {
@@ -116,28 +117,26 @@ class TestECRScanner:
         )
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=1,
-                    retry_delay=0,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=1,
+                retry_delay=0,
+            )
 
-                # Verify the result
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 2
-                assert result.severity_counts.CRITICAL == 1
-                assert result.severity_counts.HIGH == 2
-                assert len(result.findings) == 2
-                assert result.findings[0].name == "CVE-2023-1234"
+            # Verify the result
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 2
+            assert result.severity_counts.CRITICAL == 1
+            assert result.severity_counts.HIGH == 2
+            assert len(result.findings) == 2
+            assert result.findings[0].name == "CVE-2023-1234"
 
         # Verify that all expected API calls were made
         self.stubber.assert_no_pending_responses()
 
-    def test_get_image_scan_findings_in_progress(self):
+    def test_get_image_scan_findings_in_progress(self) -> None:
         """Test handling of scan in progress"""
         repository_name = "test-repo"
         image_tag = "latest"
@@ -176,7 +175,7 @@ class TestECRScanner:
                             {"key": "package_name", "value": "test-package"},
                             {"key": "package_version", "value": "1.0.0"},
                         ],
-                    }
+                    },
                 ],
             },
         }
@@ -187,30 +186,27 @@ class TestECRScanner:
         )
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=2,
-                    retry_delay=0,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=2,
+                retry_delay=0,
+            )
 
-                # Verify the result
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 1
-                assert result.severity_counts.MEDIUM == 1
+            # Verify the result
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 1
+            assert result.severity_counts.MEDIUM == 1
 
         # Verify that all expected API calls were made
         self.stubber.assert_no_pending_responses()
 
-    def test_get_image_scan_findings_failed(self):
+    def test_get_image_scan_findings_failed(self) -> None:
         """Test handling of failed scan"""
         repository_name = "test-repo"
         image_tag = "latest"
 
-        # Response: FAILED
         failed_response = {
             "imageScanStatus": {
                 "status": "FAILED",
@@ -224,21 +220,22 @@ class TestECRScanner:
         )
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                with pytest.raises(RuntimeError, match="Scan failed:"):
-                    get_image_scan_findings(
-                        repository_name=repository_name,
-                        image_tag=image_tag,
-                        max_retries=1,
-                        retry_delay=0,
-                    )
+        with (
+            self.stubber,
+            patch("src.scan.boto3.client", return_value=self.ecr_client),
+            pytest.raises(RuntimeError, match="Scan failed:"),
+        ):
+            get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=1,
+                retry_delay=0,
+            )
 
         # Verify that all expected API calls were made
         self.stubber.assert_no_pending_responses()
 
-    def test_scan_not_found(self):
+    def test_scan_not_found(self) -> None:
         """Test handling of scan not found"""
         repository_name = "test-repo"
         image_tag = "latest"
@@ -271,24 +268,22 @@ class TestECRScanner:
         )
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=2,
-                    retry_delay=0,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=2,
+                retry_delay=0,
+            )
 
-                # Verify the result
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 0
+            # Verify the result
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 0
 
         # Verify that all expected API calls were made
         self.stubber.assert_no_pending_responses()
 
-    def test_timeout_error(self):
+    def test_timeout_error(self) -> None:
         """Test handling of timeout when scan never completes"""
         repository_name = "test-repo"
         image_tag = "latest"
@@ -307,22 +302,24 @@ class TestECRScanner:
             )
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                with pytest.raises(TimeoutError, match="Scan results not available"):
-                    get_image_scan_findings(
-                        repository_name=repository_name,
-                        image_tag=image_tag,
-                        max_retries=3,
-                        retry_delay=0,
-                    )
+        with (
+            self.stubber,
+            patch("src.scan.boto3.client", return_value=self.ecr_client),
+            pytest.raises(TimeoutError, match="Scan results not available"),
+        ):
+            get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=3,
+                retry_delay=0,
+            )
 
         # Verify that all expected API calls were made
         self.stubber.assert_no_pending_responses()
 
     def test_ignore_list_filtering_commas(
-        self, scan_findings_response_ignore: dict[str, Any]
+        self,
+        scan_findings_response_ignore: dict[str, Any],
     ) -> None:
         """Test that vulnerabilities in the ignore list are filtered out"""
         repository_name = "test-repo"
@@ -333,30 +330,29 @@ class TestECRScanner:
             scan_findings_response_ignore,
             {"repositoryName": repository_name, "imageId": {"imageTag": image_tag}},
         )
+        ignore_list = "CVE-2023-1111,CVE-2023-3333"
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client and ignore list
-            ignore_list = "CVE-2023-1111,CVE-2023-3333"
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=1,
-                    retry_delay=0,
-                    ignore_list=ignore_list,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=1,
+                retry_delay=0,
+                ignore_list=ignore_list,
+            )
 
-                # Verify that only the non-ignored finding is present
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 1
-                assert result.severity_counts.CRITICAL == 1
-                assert result.severity_counts.HIGH == 0
-                assert len(result.findings) == 1
-                assert result.findings[0].name == "CVE-2023-2222"
+            # Verify that only the non-ignored finding is present
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 1
+            assert result.severity_counts.CRITICAL == 1
+            assert result.severity_counts.HIGH == 0
+            assert len(result.findings) == 1
+            assert result.findings[0].name == "CVE-2023-2222"
 
     def test_ignore_list_filtering_single(
-        self, scan_findings_response_ignore: dict[str, Any]
+        self,
+        scan_findings_response_ignore: dict[str, Any],
     ) -> None:
         """Test that vulnerabilities in the ignore list are filtered out"""
         repository_name = "test-repo"
@@ -366,31 +362,29 @@ class TestECRScanner:
             scan_findings_response_ignore,
             {"repositoryName": repository_name, "imageId": {"imageTag": image_tag}},
         )
-
+        ignore_list = "CVE-2023-1111"
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client and ignore list
-            ignore_list = "CVE-2023-1111"
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=1,
-                    retry_delay=0,
-                    ignore_list=ignore_list,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=1,
+                retry_delay=0,
+                ignore_list=ignore_list,
+            )
 
-                # Verify that only the non-ignored finding is present
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 2
-                assert result.severity_counts.CRITICAL == 1
-                assert result.severity_counts.HIGH == 1
-                assert len(result.findings) == 2
-                assert result.findings[0].name == "CVE-2023-2222"
-                assert result.findings[1].name == "CVE-2023-3333"
+            # Verify that only the non-ignored finding is present
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 2
+            assert result.severity_counts.CRITICAL == 1
+            assert result.severity_counts.HIGH == 1
+            assert len(result.findings) == 2
+            assert result.findings[0].name == "CVE-2023-2222"
+            assert result.findings[1].name == "CVE-2023-3333"
 
     def test_ignore_list_filtering_spaces(
-        self, scan_findings_response_ignore: dict[str, Any]
+        self,
+        scan_findings_response_ignore: dict[str, Any],
     ) -> None:
         """Test that vulnerabilities in the ignore list are filtered out"""
         repository_name = "test-repo"
@@ -401,27 +395,25 @@ class TestECRScanner:
             scan_findings_response_ignore,
             {"repositoryName": repository_name, "imageId": {"imageTag": image_tag}},
         )
+        ignore_list = "CVE-2023-1111 CVE-2023-3333"
 
         # Activate the stubber
-        with self.stubber:
-            # Call the function with the stubbed client and ignore list
-            ignore_list = "CVE-2023-1111 CVE-2023-3333"
-            with patch("src.scan.boto3.client", return_value=self.ecr_client):
-                result = get_image_scan_findings(
-                    repository_name=repository_name,
-                    image_tag=image_tag,
-                    max_retries=1,
-                    retry_delay=0,
-                    ignore_list=ignore_list,
-                )
+        with self.stubber, patch("src.scan.boto3.client", return_value=self.ecr_client):
+            result = get_image_scan_findings(
+                repository_name=repository_name,
+                image_tag=image_tag,
+                max_retries=1,
+                retry_delay=0,
+                ignore_list=ignore_list,
+            )
 
-                # Verify that only the non-ignored finding is present
-                assert isinstance(result, ScanResult)
-                assert result.total_findings == 1
-                assert result.severity_counts.CRITICAL == 1
-                assert result.severity_counts.HIGH == 0
-                assert len(result.findings) == 1
-                assert result.findings[0].name == "CVE-2023-2222"
+            # Verify that only the non-ignored finding is present
+            assert isinstance(result, ScanResult)
+            assert result.total_findings == 1
+            assert result.severity_counts.CRITICAL == 1
+            assert result.severity_counts.HIGH == 0
+            assert len(result.findings) == 1
+            assert result.findings[0].name == "CVE-2023-2222"
 
 
 @patch.dict(os.environ, {"GITHUB_OUTPUT": "/dev/null"})
@@ -431,7 +423,12 @@ class TestScanCommand:
     @patch("src.__main__.get_image_scan_findings")
     @patch("src.__main__.set_output")
     @patch("src.__main__.print_findings_table")
-    def test_scan_no_vulnerabilities(self, mock_print, mock_set_output, mock_scan):
+    def test_scan_no_vulnerabilities(
+        self,
+        mock_print: MagicMock,
+        mock_set_output: MagicMock,
+        mock_scan: MagicMock,
+    ) -> None:
         """Test scan command with no vulnerabilities"""
         from src.__main__ import scan as scan_command
 
@@ -449,12 +446,15 @@ class TestScanCommand:
                     "UNDEFINED": 0,
                 },
                 "findings": [],
-            }
+            },
         )
 
         # Run the scan command
         scan_command(
-            repository="test-repo", tag="latest", fail_threshold="critical", github=True
+            repository="test-repo",
+            tag="latest",
+            fail_threshold="critical",
+            github=True,
         )
 
         # Verify mock calls
@@ -467,8 +467,11 @@ class TestScanCommand:
     @patch("src.__main__.set_output")
     @patch("src.__main__.print_findings_table")
     def test_scan_with_critical_vulnerabilities(
-        self, mock_print, mock_set_output, mock_scan
-    ):
+        self,
+        mock_print: MagicMock,
+        mock_set_output: MagicMock,
+        mock_scan: MagicMock,
+    ) -> None:
         """Test scan command with critical vulnerabilities"""
         from src.__main__ import scan as scan_command
 
@@ -495,14 +498,17 @@ class TestScanCommand:
                             {"key": "package_name", "value": "vulnerable-package"},
                             {"key": "package_version", "value": "1.0.0"},
                         ],
-                    }
+                    },
                 ],
-            }
+            },
         )
 
         # Run the scan command
         scan_command(
-            repository="test-repo", tag="latest", fail_threshold="critical", github=True
+            repository="test-repo",
+            tag="latest",
+            fail_threshold="critical",
+            github=True,
         )
 
         # Verify mock calls
@@ -512,7 +518,7 @@ class TestScanCommand:
         mock_set_output.assert_any_call("outcome", "failure")
 
     @patch("src.__main__.get_image_scan_findings")
-    def test_scan_without_github_action(self, mock_scan):
+    def test_scan_without_github_action(self, mock_scan: MagicMock) -> None:
         """Test scan command without GitHub Actions output"""
         from src.__main__ import scan as scan_command
 
@@ -539,9 +545,9 @@ class TestScanCommand:
                             {"key": "package_name", "value": "vulnerable-package"},
                             {"key": "package_version", "value": "1.0.0"},
                         ],
-                    }
+                    },
                 ],
-            }
+            },
         )
 
         # Run the scan command and expect an exception
@@ -554,7 +560,7 @@ class TestScanCommand:
             )
 
 
-def test_finding_unknown_package_info():
+def test_finding_unknown_package_info() -> None:
     """Test the Finding model with missing package information"""
     # Create a Finding without package info
     finding = Finding(
@@ -564,7 +570,7 @@ def test_finding_unknown_package_info():
         severity="HIGH",
         attributes=[
             # No package_name or package_version attributes
-            {"key": "other_key", "value": "other_value"}
+            {"key": "other_key", "value": "other_value"},
         ],  # type: ignore
     )
 
@@ -573,7 +579,7 @@ def test_finding_unknown_package_info():
     assert finding.package_version == "Unknown"
 
 
-def test_client_error_handling():
+def test_client_error_handling() -> None:
     """Test that ClientError is propagated except for ScanNotFoundException"""
     from unittest.mock import MagicMock
 
@@ -582,12 +588,14 @@ def test_client_error_handling():
     # Mock the ECR client
     mock_client = MagicMock()
 
-    # Set up the mock to raise a ClientError with a code other than ScanNotFoundException
+    # Set up the mock to raise a ClientError with a code
+    # other than ScanNotFoundException
     error_response = {
-        "Error": {"Code": "AccessDeniedException", "Message": "Access denied"}
+        "Error": {"Code": "AccessDeniedException", "Message": "Access denied"},
     }
     mock_client.describe_image_scan_findings.side_effect = ClientError(
-        error_response, "DescribeImageScanFindings"
+        error_response,  # type: ignore
+        "DescribeImageScanFindings",
     )
 
     # Verify the error is propagated
@@ -595,4 +603,4 @@ def test_client_error_handling():
         get_scan_findings(mock_client, "test-repo", "latest")
 
     # Verify it's the right error
-    assert excinfo.value.response["Error"]["Code"] == "AccessDeniedException"
+    assert excinfo.value.response["Error"]["Code"] == "AccessDeniedException"  # type: ignore
