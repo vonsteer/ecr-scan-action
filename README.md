@@ -25,6 +25,8 @@ This action provides a way to retrieve ECR automatic scans with direct feedback 
     ignore_list: CVE-2023-1234 CVE-2023-5678  # Optional: CVEs to ignore
     region: us-east-2        # Optional: AWS region (default: us-east-2)
     pr_comment: true         # Optional: Post results as PR comment (default: true)
+    max_retries: 10          # Optional: Maximum number of retries for API calls (default: 10)
+    retry_delay: 5           # Optional: Delay between retries in seconds (default: 5)
 ```
 
 ## Inputs
