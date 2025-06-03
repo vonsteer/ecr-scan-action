@@ -18,6 +18,9 @@ class TestMain:
         assert args.github_action is True
         assert args.region == "us-west-2"
         assert args.fail_threshold == "high"  # default value
+        assert args.ignore_list is None
+        assert args.max_retries == 10  # default value
+        assert args.retry_delay == 5  # default value
 
     @patch("src.__main__.scan")
     @patch("src.__main__.parse_args")
@@ -35,6 +38,8 @@ class TestMain:
         mock_args.ignore_list = None
         mock_args.github_action = True
         mock_args.region = "us-east-2"
+        mock_args.max_retries = 10
+        mock_args.retry_delay = 5
         mock_parse_args.return_value = mock_args
 
         # Execute the main function
@@ -48,4 +53,6 @@ class TestMain:
             ignore_list=None,
             github=True,
             region="us-east-2",
+            max_retries=10,
+            retry_delay=5,
         )
