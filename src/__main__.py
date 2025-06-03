@@ -14,8 +14,6 @@ from src.scan import Finding, ScanResult, get_image_scan_findings
 
 MAX_DESCRIPTION_LENGTH = 300
 
-GITHUB_OUTPUT_FILE = Path(os.environ["GITHUB_OUTPUT"])
-
 
 def print_findings_table(scan_result: ScanResult, console: Console) -> None:
     """Print a formatted table of vulnerability findings."""
@@ -162,7 +160,7 @@ def set_output(name: str, value: str) -> None:
         name: Name of the output variable
         value: Value to set
     """
-    with GITHUB_OUTPUT_FILE.open("a") as fh:
+    with Path(os.environ["GITHUB_OUTPUT"]).open("a") as fh:
         if "\n" in value:
             # Use delimiter syntax for multiline values
             delimiter = uuid.uuid4()
