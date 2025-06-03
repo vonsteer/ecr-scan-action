@@ -1,4 +1,6 @@
 # AWS ECR Security Scanner Action
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Coverage Status](./coverage-badge.svg?dummy=8484744)](./coverage-badge.svg)
 
 A GitHub Action to scan container images in Amazon ECR for security vulnerabilities.
 This action provides a way to retrieve ECR automatic scans with direct feedback in a PR, failing builds if serious security issues are detected.
@@ -15,7 +17,7 @@ This action provides a way to retrieve ECR automatic scans with direct feedback 
 ## Usage
 
 ```yaml
-- uses: vonsteer/ecr-scanning-action@v1.0.0
+- uses: vonsteer/ecr-scanning-action@v1
   with:
     repository: myorg/myimage  # ECR repository name
     tag: latest               # Image tag to scan
@@ -82,7 +84,7 @@ jobs:
           role-to-assume: arn:aws:iam::123456789012:role/github-actions
           aws-region: us-east-2
 
-      - uses: vonsteer/ecr-scanning-action@v1.0.0
+      - uses: vonsteer/ecr-scanning-action@v1
         with:
           repository: myorg/myimage
           tag: latest
@@ -120,6 +122,41 @@ uv pip install .
 
 # Run the scanner
 ecr-scan myorg/myimage latest --fail-threshold high --ignore-list CVE-2023-1234
+```
+
+## Testing
+
+This project includes a comprehensive testing strategy with unit tests and integration tests:
+
+### Unit Tests
+
+Unit tests use the botocore stubber to mock AWS API interactions:
+
+```bash
+# Run all tests
+make test
+
+# Run specific tests
+make test-only TestECRScanner
+```
+
+### Integration Tests
+
+A GitHub workflow (`action-integration-test.yml`) tests the action with actual AWS resources:
+1. Pushes a test image to ECR
+2. Runs the scanning action against the image
+3. Tests both success and failure scenarios
+4. Tests the CVE ignore list functionality
+
+This ensures the action works correctly in real-world scenarios.
+
+### Smoke Test
+
+A basic smoke test ensures the package can be imported and executed:
+
+```bash
+# Run the smoke test
+python tests/smoke_test.py
 ```
 
 ## License

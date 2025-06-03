@@ -119,3 +119,6 @@ dmypy.json
 **/.DS_Store
 *.swp
 *.swo
+
+
+coverage.xml

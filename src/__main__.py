@@ -83,7 +83,7 @@ def scan(
     ignore_list: str | None = None,
     github: bool = False,
     region: str = "us-east-2",
-):
+) -> None:
     """
     Main function to scan ECR images and check for vulnerabilities
 

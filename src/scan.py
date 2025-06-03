@@ -65,6 +65,12 @@ class ScanResult(BaseModel):
     def filter_findings(cls, data: Any) -> Any:
         if ignore_list := data.get("ignore_list"):
             # Filter out ignored findings
+            if "," in ignore_list:
+                ignore_list = ignore_list.split(",")
+            elif " " in ignore_list:
+                ignore_list = ignore_list.split(" ")
+            else:
+                ignore_list = [ignore_list]
             filtered_findings = []
             filtered_severity_counts = {
                 "CRITICAL": 0,
