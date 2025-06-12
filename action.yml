@@ -63,7 +63,7 @@ runs:
       id: scan
       shell: bash
       run: |
-        uv run ecr-scan '${{ inputs.repository }}' \
+        ecr-scan '${{ inputs.repository }}' \
                  '${{ inputs.tag }}' \
                  --github_action \
                  --fail-threshold='${{ inputs.fail_threshold }}' \
