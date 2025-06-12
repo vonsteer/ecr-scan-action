@@ -67,7 +67,7 @@ runs:
                  '${{ inputs.tag }}' \
                  --github_action \
                  --fail-threshold='${{ inputs.fail_threshold }}' \
-                 --ignore-list='${{ inputs.ignore_list }}'
+                 --ignore-list='${{ inputs.ignore_list }}' \
                  --region='${{ inputs.region }}' \
                  --max-retries='${{ inputs.max_retries }}' \
                  --retry-delay='${{ inputs.retry_delay }}'
