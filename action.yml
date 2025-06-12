@@ -55,6 +55,7 @@ runs:
       uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
+        activate-environment: true
     - name: Install dependencies with uv
       shell: bash
       run: uv pip install ${{ github.action_path }}
