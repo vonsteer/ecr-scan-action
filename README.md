@@ -140,12 +140,9 @@ Unit tests use the botocore stubber to mock AWS API interactions:
 ```bash
 # Run all tests
 make test
-
-# Run specific tests
-make test-only TestECRScanner
 ```
 
-### Integration Tests
+### Integration Tests TBD
 
 A GitHub workflow (`action-integration-test.yml`) tests the action with actual AWS resources:
 1. Pushes a test image to ECR
