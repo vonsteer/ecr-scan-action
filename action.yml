@@ -57,13 +57,12 @@ runs:
         enable-cache: true
     - name: Install dependencies with uv
       shell: bash
-      run: |
-        uv pip install --system ${{ github.action_path }}
+      run: uv pip install ${{ github.action_path }}
     - name: Pull Scan Results
       id: scan
       shell: bash
       run: |
-        ecr-scan '${{ inputs.repository }}' \
+        uv run ecr-scan '${{ inputs.repository }}' \
                  '${{ inputs.tag }}' \
                  --github_action \
                  --fail-threshold='${{ inputs.fail_threshold }}' \
