@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from botocore.stub import Stubber
 
 from src.scan import Finding, ScanResult, get_image_scan_findings
+from src.utils import generate_markdown_report
 
 
 @pytest.fixture()
@@ -604,3 +605,126 @@ def test_client_error_handling() -> None:
 
     # Verify it's the right error
     assert excinfo.value.response["Error"]["Code"] == "AccessDeniedException"  # type: ignore
+
+
+def test_scan_markdown() -> None:
+    """Test scan command without GitHub Actions output"""
+    # Mock the scan result with critical vulnerabilities
+    scan_result = ScanResult.model_validate(
+        {
+            "imageScanCompletedAt": datetime.now(),
+            "vulnerabilitySourceUpdatedAt": datetime.now(),
+            "findingSeverityCounts": {
+                "CRITICAL": 1,
+                "HIGH": 0,
+                "MEDIUM": 0,
+                "LOW": 0,
+                "INFORMATIONAL": 0,
+                "UNDEFINED": 0,
+            },
+            "ignore_list": ["CVE-2023-1235", "CVE-2023-1236"],
+            "findings": [
+                {
+                    "name": "CVE-2023-1234",
+                    "description": "Critical vulnerability",
+                    "uri": "https://example.com/CVE-2023-1234",
+                    "severity": "CRITICAL",
+                    "attributes": [
+                        {"key": "package_name", "value": "vulnerable-package"},
+                        {"key": "package_version", "value": "1.0.0"},
+                    ],
+                },
+                {
+                    "name": "CVE-2023-1235",
+                    "description": "This finding should be ignored",
+                    "uri": "https://nvd.nist.gov/vuln/detail/CVE-2023-1235",
+                    "severity": "CRITICAL",
+                    "attributes": [
+                        {"key": "package_name", "value": "package1"},
+                        {"key": "package_version", "value": "1.0.0"},
+                    ],
+                },
+            ],
+        },
+    )
+
+    markdown_report = generate_markdown_report(
+        repository="test-repo",
+        tag="latest",
+        scan_result=scan_result,
+    )
+
+    # Assert that the markdown report contains the expected content
+    assert "AWS ECR Security Scan Results" in markdown_report
+    assert "Critical vulnerability" in markdown_report
+
+
+def test_scan_markdown_ok() -> None:
+    """Test scan command without GitHub Actions output"""
+    # Mock the scan result with critical vulnerabilities
+    scan_result = ScanResult.model_validate(
+        {
+            "imageScanCompletedAt": datetime.now(),
+            "vulnerabilitySourceUpdatedAt": datetime.now(),
+            "findingSeverityCounts": {
+                "CRITICAL": 0,
+                "HIGH": 0,
+                "MEDIUM": 0,
+                "LOW": 0,
+                "INFORMATIONAL": 0,
+                "UNDEFINED": 0,
+            },
+            "ignore_list": ["CVE-2023-1235"],
+            "findings": [
+                {
+                    "name": "CVE-2023-1235",
+                    "description": "lorem ipsum dolor sit amet," * 30,
+                    "uri": "https://nvd.nist.gov/vuln/detail/CVE-2023-1235",
+                    "severity": "CRITICAL",
+                    "attributes": [
+                        {"key": "package_name", "value": "package1"},
+                        {"key": "package_version", "value": "1.0.0"},
+                    ],
+                },
+            ],
+        },
+    )
+
+    markdown_report = generate_markdown_report(
+        repository="test-repo",
+        tag="latest",
+        scan_result=scan_result,
+    )
+
+    # Assert that the markdown report contains the expected content
+    assert "AWS ECR Security Scan Results" in markdown_report
+
+
+def test_scan_markdown_good() -> None:
+    """Test scan command without GitHub Actions output"""
+    # Mock the scan result with critical vulnerabilities
+    scan_result = ScanResult.model_validate(
+        {
+            "imageScanCompletedAt": datetime.now(),
+            "vulnerabilitySourceUpdatedAt": datetime.now(),
+            "findingSeverityCounts": {
+                "CRITICAL": 0,
+                "HIGH": 0,
+                "MEDIUM": 0,
+                "LOW": 0,
+                "INFORMATIONAL": 0,
+                "UNDEFINED": 0,
+            },
+            "ignore_list": [],
+            "findings": [],
+        },
+    )
+
+    markdown_report = generate_markdown_report(
+        repository="test-repo",
+        tag="latest",
+        scan_result=scan_result,
+    )
+
+    # Assert that the markdown report contains the expected content
+    assert "AWS ECR Security Scan Results" in markdown_report

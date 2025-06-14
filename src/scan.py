@@ -9,6 +9,9 @@ from botocore.exceptions import ClientError
 from pydantic import BaseModel, Field, computed_field, model_validator
 from rich import print
 
+from src.constants import SEVERITY_LEVELS
+from src.utils import parse_ignore_list
+
 if TYPE_CHECKING:
     from types_boto3_ecr.client import ECRClient
     from types_boto3_ecr.type_defs import DescribeImageScanFindingsResponseTypeDef
@@ -61,15 +64,27 @@ class Finding(BaseModel):
 class ScanResult(BaseModel):
     """Model representing the result of an ECR image scan."""
 
-    ignore_list: str | None = Field(None, repr=False)
+    ignore_list: list[str] | None = Field(None, repr=False)
+    threshold_level: int = Field(4, repr=False)
+
     scan_completed_at: datetime = Field(..., alias="imageScanCompletedAt")
     source_updated_at: datetime = Field(..., alias="vulnerabilitySourceUpdatedAt")
     severity_counts: SeverityCount = Field(..., alias="findingSeverityCounts")
     findings: list[Finding] = Field(default_factory=list)
+    ignored_findings: list[Finding] = Field(default_factory=list)
     enhanced_findings: list[Finding] = Field(
         default_factory=list,
         alias="enhancedFindings",
     )
+
+    @computed_field
+    def failed_findings_count(self) -> int:
+        """Calculate the number of failed findings based on severity threshold."""
+        failed_count = 0
+        for severity, count in self.severity_counts:
+            if count and SEVERITY_LEVELS[severity.lower()] >= self.threshold_level:
+                failed_count += count
+        return failed_count
 
     @model_validator(mode="before")
     @classmethod
@@ -77,12 +92,7 @@ class ScanResult(BaseModel):
         """Filter findings based on the ignore list."""
         if ignore_list := data.get("ignore_list"):
             # Filter out ignored findings
-            if "," in ignore_list:
-                ignore_list = ignore_list.split(",")
-            elif " " in ignore_list:
-                ignore_list = ignore_list.split(" ")
-            else:
-                ignore_list = [ignore_list]
+
             filtered_findings = []
             filtered_severity_counts = {
                 "CRITICAL": 0,
@@ -94,6 +104,7 @@ class ScanResult(BaseModel):
             }
             for finding in data.get("findings", []):
                 if any(item in finding["name"] for item in ignore_list):
+                    data.setdefault("ignored_findings", []).append(finding)
                     continue
                 filtered_severity_counts[finding["severity"]] += 1
                 filtered_findings.append(finding)
@@ -141,6 +152,7 @@ def get_image_scan_findings(
     max_retries: int = 10,
     retry_delay: int = 5,
     ignore_list: str | None = None,
+    threshold_level: int = 3,  # Default to 'high' severity
 ) -> ScanResult:
     """
     Retrieve the security scan findings for a specified ECR image.
@@ -176,7 +188,8 @@ def get_image_scan_findings(
             case "COMPLETE":
                 return ScanResult(
                     **findings.get("imageScanFindings", {}),  # type: ignore
-                    ignore_list=ignore_list,
+                    ignore_list=parse_ignore_list(ignore_list),
+                    threshold_level=threshold_level,
                 )
             case "FAILED":
                 raise RuntimeError(
