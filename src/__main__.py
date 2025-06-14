@@ -14,6 +14,7 @@ from src.constants import (
     SEVERITY_LEVELS,
 )
 from src.scan import Finding, ScanResult, get_image_scan_findings
+from src.utils import generate_markdown_report
 
 MAX_DESCRIPTION_LENGTH = 300
 
@@ -131,7 +132,14 @@ def scan(
         set_output("undefined", str(scan_result.severity_counts.UNDEFINED))
         set_output("total", str(scan_result.total_findings))
         set_output("detailed_findings", json.dumps(detailed_findings, indent=2))
-        set_output("markdown_report", "")
+        set_output(
+            "markdown_report",
+            generate_markdown_report(
+                repository=repository,
+                tag=tag,
+                scan_result=scan_result,
+            ),
+        )
 
     if scan_result.failed_findings_count:
         message = (
