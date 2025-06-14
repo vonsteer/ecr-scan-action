@@ -10,6 +10,9 @@ from rich.box import SQUARE
 from rich.console import Console
 from rich.table import Table
 
+from src.constants import (
+    SEVERITY_LEVELS,
+)
 from src.scan import Finding, ScanResult, get_image_scan_findings
 
 MAX_DESCRIPTION_LENGTH = 300
@@ -104,17 +107,7 @@ def scan(
     Raises:
         RuntimeError: If vulnerabilities are found at or above the fail threshold
     """
-    severity_levels = {
-        "critical": 4,
-        "high": 3,
-        "medium": 2,
-        "low": 1,
-        "informational": 0,
-        "undefined": 0,
-        "none": 5,
-    }
-
-    threshold_level = severity_levels[fail_threshold.lower()]
+    threshold_level = SEVERITY_LEVELS[fail_threshold.lower()]
 
     scan_result: ScanResult = get_image_scan_findings(
         repository_name=repository,
@@ -123,9 +116,11 @@ def scan(
         region=region,
         max_retries=max_retries,
         retry_delay=retry_delay,
+        threshold_level=threshold_level,
     )
     print_findings_table(scan_result, Console(force_terminal=True))
     detailed_findings = [i.model_dump() for i in scan_result.findings]
+
     if github:
         # Set output variables using GitHub Actions workflow commands
         set_output("critical", str(scan_result.severity_counts.CRITICAL))
@@ -136,15 +131,11 @@ def scan(
         set_output("undefined", str(scan_result.severity_counts.UNDEFINED))
         set_output("total", str(scan_result.total_findings))
         set_output("detailed_findings", json.dumps(detailed_findings, indent=2))
+        set_output("markdown_report", "")
 
-    failing_counts = 0
-    for severity, count in scan_result.severity_counts:
-        if count and severity_levels[severity.lower()] >= threshold_level:
-            failing_counts += count
-
-    if failing_counts:
+    if scan_result.failed_findings_count:
         message = (
-            f"Found {failing_counts} vulnerabilities at"
+            f"Found {scan_result.failed_findings_count} vulnerabilities at"
             f" or above the {fail_threshold} threshold"
         )
         if github:

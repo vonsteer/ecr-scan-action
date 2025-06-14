@@ -117,6 +117,55 @@ The action requires the following AWS IAM permissions:
 }
 ```
 
+## Example 🆗 Report
+
+### 🛡️ AWS ECR Security Scan Results
+#### 📦 Image: `test-repo:latest`
+
+
+#### 🚨 Ignored Findings
+|     Name    |Severity| Package|Version|          Description         |
+|-------------|--------|--------|-------|------------------------------|
+|CVE-2023-1235|CRITICAL|package1| 1.0.0 |This finding should be ignored|
+
+
+🎉 **Build Succeeded**: No vulnerabilities were detected.
+
+
+## Example 😔 Report
+### 🛡️ AWS ECR Security Scan Results
+#### 📦 Image: `test-repo:latest`
+
+
+#### 📈 Vulnerability Summary
+|  |   Severity  |Count|
+|--|-------------|-----|
+|⚠️|   CRITICAL  |  1  |
+| 🔴|     HIGH    |  0  |
+| 🟡|    MEDIUM   |  0  |
+| 🟢|     LOW     |  0  |
+| 🔵|INFORMATIONAL|  0  |
+| ❓|  UNDEFINED  |  0  |
+
+
+#### 🔍 Detailed Findings
+|     Name    |Severity|      Package     |Version|      Description     |
+|-------------|--------|------------------|-------|----------------------|
+|CVE-2023-1234|CRITICAL|vulnerable-package| 1.0.0 |Critical vulnerability|
+
+
+#### 🚨 Ignored Findings
+|     Name    |Severity| Package|Version|          Description         |
+|-------------|--------|--------|-------|------------------------------|
+|CVE-2023-1235|CRITICAL|package1| 1.0.0 |This finding should be ignored|
+
+
+⚠️ **Warning**: Some ignored CVEs were not found in the scan results.
+
+
+⚠️ **Build Failed**: Vulnerabilities were detected that exceeded threshold.
+These must be addressed before merging.
+
 ## Local Usage
 
 You can also use the scanner locally:
