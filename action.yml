@@ -74,7 +74,6 @@ runs:
     - name: PR Feedback Comment
       if: |
         inputs.pr_comment &&
-        steps.scan.outputs.total != '0' &&
         github.event_name == 'pull_request'
       uses: peter-evans/create-or-update-comment@v3
       with:
