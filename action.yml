@@ -56,6 +56,7 @@ runs:
       with:
         enable-cache: true
         activate-environment: true
+        python-version: 3.13
     - name: Install dependencies with uv
       shell: bash
       run: uv pip install ${{ github.action_path }}
