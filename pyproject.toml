@@ -40,7 +40,7 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
-    "ruff==0.15.12",
+    "ruff==0.15.18",
     "pyright==1.1.399",
     "pre-commit==4.6.0",
     "genbadge[coverage]",
