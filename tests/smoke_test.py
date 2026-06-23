@@ -4,6 +4,7 @@ Smoke test to verify that the package can be imported and executed.
 This file is used during the CI process to validate that the built package is working.
 """
 
+import importlib
 import subprocess
 import sys
 
@@ -11,7 +12,7 @@ import sys
 def test_smoke() -> None:
     try:
         # Import the main module to verify it can be imported
-        import src.__main__
+        importlib.import_module("src.__main__")
 
         print("Successfully imported src.__main__")
 
