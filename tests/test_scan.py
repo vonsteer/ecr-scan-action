@@ -8,7 +8,8 @@ import pytest
 from botocore.exceptions import ClientError
 from botocore.stub import Stubber
 
-from src.scan import Finding, ScanResult, get_image_scan_findings
+from src.__main__ import scan as scan_command
+from src.scan import Finding, ScanResult, get_image_scan_findings, get_scan_findings
 from src.utils import generate_markdown_report
 
 
@@ -431,8 +432,6 @@ class TestScanCommand:
         mock_scan: MagicMock,
     ) -> None:
         """Test scan command with no vulnerabilities"""
-        from src.__main__ import scan as scan_command
-
         # Mock the scan result
         mock_scan.return_value = ScanResult.model_validate(
             {
@@ -474,8 +473,6 @@ class TestScanCommand:
         mock_scan: MagicMock,
     ) -> None:
         """Test scan command with critical vulnerabilities"""
-        from src.__main__ import scan as scan_command
-
         # Mock the scan result with critical vulnerabilities
         mock_scan.return_value = ScanResult.model_validate(
             {
@@ -521,8 +518,6 @@ class TestScanCommand:
     @patch("src.__main__.get_image_scan_findings")
     def test_scan_without_github_action(self, mock_scan: MagicMock) -> None:
         """Test scan command without GitHub Actions output"""
-        from src.__main__ import scan as scan_command
-
         # Mock the scan result with critical vulnerabilities
         mock_scan.return_value = ScanResult.model_validate(
             {
@@ -582,10 +577,6 @@ def test_finding_unknown_package_info() -> None:
 
 def test_client_error_handling() -> None:
     """Test that ClientError is propagated except for ScanNotFoundException"""
-    from unittest.mock import MagicMock
-
-    from src.scan import get_scan_findings
-
     # Mock the ECR client
     mock_client = MagicMock()
 
