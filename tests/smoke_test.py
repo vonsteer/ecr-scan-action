@@ -11,7 +11,7 @@ import sys
 def test_smoke() -> None:
     try:
         # Import the main module to verify it can be imported
-        import src.__main__
+        __import__("src.__main__")
 
         print("Successfully imported src.__main__")
 
