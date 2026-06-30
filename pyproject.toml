@@ -41,7 +41,7 @@ packages = ["src"]
 [dependency-groups]
 dev = [
     "ruff==0.15.18",
-    "pyright==1.1.410",
+    "pyright==1.1.411",
     "pre-commit==4.6.0",
     "genbadge[coverage]",
     "pytest~=9.0.3",
